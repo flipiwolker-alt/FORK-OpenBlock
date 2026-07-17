@@ -1,0 +1,64 @@
+name: Build macOS app
+
+# Builds the unsigned .dmg. Must run on macOS — scripts/electron-builder-wrapper.js picks its
+# targets from process.platform, so a .dmg cannot be produced from Windows or Linux.
+#
+# Intel runner on purpose: openblock-tools only ships a darwin-x64 build (no arm64), so the
+# app is x64 too and the whole stack runs under Rosetta 2 on Apple Silicon. macos-13, which
+# upstream used, was retired on 2025-12-04; macos-15-intel is the x64 replacement.
+#
+# The .dmg is delivered as a build artifact rather than a Release asset: it may exceed the
+# 2 GB Release limit, and a zipped artifact is something macOS unpacks with a double-click.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-mac:
+    runs-on: macos-15-intel
+    timeout-minutes: 300
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # Node 16 is not optional: the build fails on newer majors.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '16.x'
+
+      # node-gyp 8 (bundled with npm 8) rejects the Python 3.13 that ships on macOS 15.
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Point node-gyp at Python 3.11
+        run: npm config set python "$(which python3)"
+
+      - name: Install dependencies
+        run: npm ci
+
+      # clean + compile + fetch:all (~1 GB darwin toolchain) + electron-builder.
+      # Signing is already disabled inside the wrapper, so only the dmg target builds.
+      - name: Build dmg
+        env:
+          NODE_ENV: production
+          NODE_OPTIONS: --max_old_space_size=8192
+          CSC_IDENTITY_AUTO_DISCOVERY: false
+          USE_HARD_LINKS: false
+        run: npm run dist
+
+      # Tells us whether the dmg could ever be a Release asset (2 GB limit).
+      - name: Show what was built
+        run: ls -lh dist/*.dmg
+
+      - name: Upload dmg
+        uses: actions/upload-artifact@v4
+        with:
+          name: OpenBlock-Desktop-mac-x64
+          path: dist/*.dmg
+          # The dmg is already compressed; re-zipping it only burns minutes.
+          compression-level: 0
+          retention-days: 7
