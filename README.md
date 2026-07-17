@@ -1,44 +1,90 @@
-# openblock-desktop
+# FORK-OpenBlock
 
-[![Build and release](https://github.com/openblockcc/openblock-desktop/actions/workflows/build-and-release.yml/badge.svg)](https://github.com/openblockcc/openblock-desktop/actions/workflows/build-and-release.yml)
-![GitHub release (latest by date)](https://img.shields.io/github/v/release/openblockcc/openblock-desktop)
-![Total downloads](https://img.shields.io/github/downloads/openblockcc/openblock-desktop/total)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fopenblockcc%2Fopenblock-desktop.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fopenblockcc%2Fopenblock-desktop?ref=badge_shield)
-[![Gitter](https://badges.gitter.im/openblockcc/community.svg)](https://gitter.im/openblockcc/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
-[![ko-fi](https://img.shields.io/badge/donate-sponsors-ea4aaa.svg?logo=ko-fi)](https://ko-fi.com/X8X66DATO)
+Форк [openblock-desktop](https://github.com/openblockcc/openblock-desktop) v2.6.3 — визуальное
+программирование Arduino Uno и ESP32 блоками, как отдельное десктопное приложение.
 
-OpenBlock as a standalone desktop application.
+Цель форка: **пользователь скачивает один `.exe`, устанавливает и работает.** Ни Node, ни
+arduino-cli, ни интернет после установки не нужны — тулчейн едет внутри установщика.
 
 ![screenshot](./doc/screenshot.png)
-![screenshot2](./doc/screenshot2.png)
 
-## Getting Start
+## Скачать
 
-Visit the wiki: [https://wiki.openblock.cc](https://wiki.openblock.cc)
+Готовый установщик — на вкладке [Releases](../../releases): `OpenBlock-Desktop_v2.6.3_win_x64.exe`
+(~1.5 ГБ, Windows x64). Скачать → запустить → установить → пользоваться.
 
-## Join chat
+> **Не меняйте путь установки на папку с русскими буквами.** Путь по умолчанию
+> (`C:\OpenBlockDesktop`) правильный. Установщик предупредит и предложит исправить путь, если
+> в нём окажется кириллица: на таком пути **ESP32 не компилируется** (см. ниже). Arduino Uno
+> работает на любом пути.
 
-- Gitter: [https://gitter.im/openblockcc/community](https://gitter.im/openblockcc/community?utm_source=share-link&utm_medium=link&utm_campaign=share-link)
+## Почему установщика нет в git
 
-- QQ 群 (for chinese): 933484739
+В репозитории лежит только исходный код (~1.5 МБ). Установщик весит 1.5 ГБ — это в 15 раз
+больше лимита GitHub на файл в git (100 МБ), поэтому он собирается в CI и публикуется в
+Releases (там лимит 2 ГБ).
 
-## Donate
+Тулчейн, прошивки, драйверы и расширения (~6.5 ГБ) тоже не хранятся в git — они скачиваются
+из релизов апстрима скриптом `npm run fetch:all` во время сборки и запекаются в установщик.
+Так устроен и апстрим; соответствующие папки перечислены в `.gitignore`.
 
-Buy me a cup of coffee.
+Итог: **репозиторий маленький, а установщик самодостаточный.**
 
-- Ko-fi (PayPal):
+## Известная проблема: кириллица в пути установки ломает ESP32
 
-    [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/X8X66DATO)
+Подтверждено воспроизводимым тестом (`qa/scripts/repro-cyrillic.sh`):
 
-- 支付宝:
+| Плата | Путь к тулчейну | Результат |
+|---|---|---|
+| Arduino Uno (AVR) | кириллица | компилируется |
+| ESP32 | кириллица | **паника `Failed to get path name`** |
+| ESP32 | ASCII | компилируется |
+| ESP32 | ASCII-тулчейн + кириллический build-путь | компилируется |
 
-    ![alipayQRCode](./doc/alipayQRCode.png)
+Ломает **только кириллица в пути к тулчейну**, то есть в папке установки. Путь сборки и имя
+Windows-аккаунта значения не имеют — то есть пользователю с именем `C:\Users\Пользователь\`
+ничего не грозит, пока приложение стоит на ASCII-пути. Падает Rust-утилита из состава
+esp32-тулчейна; AVR-тулчейн кириллицу переживает.
 
-## Bug Report
+Дефолтный путь установки (`C:\OpenBlockDesktop`) — ASCII, поэтому «поставил по умолчанию и
+работает» выполняется. Защита от ручного выбора кириллической папки добавлена в
+`buildResources/installer.nsh`.
 
-You can submit the bug log in issues of this project.
+## Сборка из исходников
 
+Нужен **Node 16** (на новых версиях сборка падает) и ~20 ГБ свободного места.
 
-## License
-[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fopenblockcc%2Fopenblock-desktop.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fopenblockcc%2Fopenblock-desktop?ref=badge_large)
+```sh
+npm ci
+npm run fetch:all      # ~6.5 ГБ тулчейна, прошивок, драйверов
+npm run dist           # установщик появится в dist/
+```
+
+Полностью это же делает CI — `.github/workflows/build-installer.yml`.
+
+## Выпустить релиз
+
+Сборка установщика запускается вручную (Actions → Build installer → Run workflow) или тегом:
+
+```sh
+git tag v2.6.3-fork.1 && git push origin v2.6.3-fork.1
+```
+
+CI соберёт `.exe` и приложит его к релизу.
+
+## Структура
+
+- `src/`, `scripts/`, `buildResources/` — исходники приложения (форк апстрима).
+- `qa/` — тестовая оснастка: скетчи, конфиги `arduino-cli`, проект симулятора Wokwi,
+  тест-план и скрипт воспроизведения бага с кириллицей. См. [qa/README.md](qa/README.md).
+- `.github/workflows/build-installer.yml` — сборка установщика и публикация в Releases.
+
+## Апстрим и лицензия
+
+Форк сохраняет полную историю апстрима (533 коммита) и подключён как remote `origin`.
+Подтянуть изменения: `git fetch origin && git merge origin/main`.
+
+Лицензия — MIT, как у апстрима (см. [LICENSE](LICENSE)). Части кода унаследованы от
+Scratch Foundation, см. [LICENSE.ScratchFoundation](LICENSE.ScratchFoundation) и
+[TRADEMARK](TRADEMARK). Документация апстрима: [wiki.openblock.cc](https://wiki.openblock.cc),
+чат — [Gitter](https://gitter.im/openblockcc/community).
