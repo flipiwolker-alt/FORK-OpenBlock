@@ -1,0 +1,31 @@
+board_manager:
+    additional_urls:
+        - https://espressif.github.io/arduino-esp32/package_esp32_index.json
+        - https://arduino.esp8266.com/stable/package_esp8266com_index.json
+        - https://raw.githubusercontent.com/sparkfun/Arduino_Boards/master/IDE_Board_Manager/package_sparkfun_index.json
+        - http://dl.sipeed.com/MAIX/Maixduino/package_Maixduino_k210_index.json
+        - https://github.com/earlephilhower/arduino-pico/releases/download/global/package_rp2040_index.json
+build_cache:
+    compilations_before_purge: 10
+    ttl: 720h0m0s
+daemon:
+    port: "50051"
+directories:
+    data: E:/openblock-desktop/tools/Arduino
+    downloads: E:/openblock-desktop/tools/Arduino/staging
+    user: E:/openblock-desktop/tools/Arduino
+library:
+    enable_unsafe_install: false
+logging:
+    file: ""
+    format: text
+    level: info
+metrics:
+    addr: :9090
+    enabled: false
+output:
+    no_color: false
+sketch:
+    always_export_binaries: false
+updater:
+    enable_notification: false

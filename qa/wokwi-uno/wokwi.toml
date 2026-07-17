@@ -1,0 +1,6 @@
+[wokwi]
+version = 1
+# Firmware compiled by OpenBlock's own arduino-cli (arduino:avr:uno).
+# This is the exact binary the app produces — we just run it in the simulator.
+firmware = "fw/sketch.ino.hex"
+elf = "fw/sketch.ino.elf"

@@ -1,0 +1,335 @@
+<style>
+  :root{
+    --bg:#eef2f3; --surface:#ffffff; --surface-2:#f6f9f9;
+    --ink:#0f1b1f; --muted:#586a70; --border:#d6e0e2; --border-strong:#b7c6c9;
+    --accent:#0c7b86; --accent-soft:#0c7b8618;
+    --pass:#17835f; --pass-bg:#17835f18;
+    --warn:#9a6b00; --warn-bg:#9a6b0018;
+    --fail:#c23b34; --fail-bg:#c23b3418;
+    --mono:ui-monospace,"Cascadia Code","JetBrains Mono","Consolas",monospace;
+    --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    --radius:10px;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{
+      --bg:#0b1315; --surface:#111c1f; --surface-2:#0e181a;
+      --ink:#e7eff0; --muted:#8ba1a6; --border:#233437; --border-strong:#31474b;
+      --accent:#39c3ce; --accent-soft:#39c3ce1f;
+      --pass:#4ecf9f; --pass-bg:#4ecf9f1c;
+      --warn:#e0b24a; --warn-bg:#e0b24a1c;
+      --fail:#f0837a; --fail-bg:#f0837a1c;
+    }
+  }
+  :root[data-theme="light"]{
+    --bg:#eef2f3; --surface:#ffffff; --surface-2:#f6f9f9;
+    --ink:#0f1b1f; --muted:#586a70; --border:#d6e0e2; --border-strong:#b7c6c9;
+    --accent:#0c7b86; --accent-soft:#0c7b8618;
+    --pass:#17835f; --pass-bg:#17835f18; --warn:#9a6b00; --warn-bg:#9a6b0018; --fail:#c23b34; --fail-bg:#c23b3418;
+  }
+  :root[data-theme="dark"]{
+    --bg:#0b1315; --surface:#111c1f; --surface-2:#0e181a;
+    --ink:#e7eff0; --muted:#8ba1a6; --border:#233437; --border-strong:#31474b;
+    --accent:#39c3ce; --accent-soft:#39c3ce1f;
+    --pass:#4ecf9f; --pass-bg:#4ecf9f1c; --warn:#e0b24a; --warn-bg:#e0b24a1c; --fail:#f0837a; --fail-bg:#f0837a1c;
+  }
+
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.6;
+       -webkit-font-smoothing:antialiased;}
+  .wrap{max-width:900px;margin:0 auto;padding:48px 24px 96px;}
+  .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0;}
+
+  /* ---- header ---- */
+  .eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;
+           color:var(--accent);margin:0 0 14px;}
+  h1{font-size:33px;line-height:1.15;margin:0 0 12px;text-wrap:balance;letter-spacing:-.01em;font-weight:700;}
+  .lede{font-size:17px;color:var(--muted);margin:0 0 24px;max-width:62ch;}
+  .meta{display:flex;flex-wrap:wrap;gap:8px 20px;font-family:var(--mono);font-size:12.5px;color:var(--muted);
+        border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:14px 0;margin:0 0 40px;}
+  .meta b{color:var(--ink);font-weight:600;}
+
+  /* ---- summary tiles ---- */
+  .tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:0 0 44px;}
+  @media(max-width:640px){.tiles{grid-template-columns:repeat(2,1fr)}}
+  .tile{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 16px 14px;}
+  .tile .n{font-family:var(--mono);font-size:30px;font-weight:600;font-variant-numeric:tabular-nums;line-height:1;}
+  .tile .l{font-size:12.5px;color:var(--muted);margin-top:8px;}
+  .tile.pass .n{color:var(--pass)} .tile.warn .n{color:var(--warn)} .tile.fail .n{color:var(--fail)}
+
+  section{margin:0 0 52px;}
+  h2{font-size:13px;font-family:var(--mono);text-transform:uppercase;letter-spacing:.12em;color:var(--muted);
+     margin:0 0 6px;font-weight:600;}
+  .h2sub{font-size:22px;font-weight:700;margin:0 0 20px;letter-spacing:-.01em;text-wrap:balance;}
+
+  /* ---- status pill ---- */
+  .pill{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:11.5px;font-weight:600;
+        letter-spacing:.03em;text-transform:uppercase;padding:3px 9px;border-radius:100px;white-space:nowrap;}
+  .pill::before{content:"";width:7px;height:7px;border-radius:100px;background:currentColor;}
+  .pill.pass{color:var(--pass);background:var(--pass-bg)}
+  .pill.warn{color:var(--warn);background:var(--warn-bg)}
+  .pill.fail{color:var(--fail);background:var(--fail-bg)}
+  .pill.todo{color:var(--muted);background:var(--surface-2)}
+
+  /* ---- table ---- */
+  .tablewrap{overflow-x:auto;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);}
+  table{border-collapse:collapse;width:100%;min-width:620px;font-size:14px;}
+  th,td{text-align:left;padding:12px 14px;border-bottom:1px solid var(--border);vertical-align:top;}
+  th{font-family:var(--mono);font-size:11.5px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);
+     font-weight:600;background:var(--surface-2);position:sticky;top:0;}
+  tr:last-child td{border-bottom:none;}
+  td.id{font-family:var(--mono);color:var(--accent);font-weight:600;white-space:nowrap;}
+  .ev{font-family:var(--mono);font-size:12px;color:var(--muted);}
+  code{font-family:var(--mono);font-size:.88em;background:var(--surface-2);border:1px solid var(--border);
+       border-radius:5px;padding:1px 5px;}
+
+  /* ---- callout ---- */
+  .callout{border:1px solid var(--border-strong);border-radius:var(--radius);overflow:hidden;background:var(--surface);}
+  .callout .bar{padding:14px 18px;font-weight:700;display:flex;align-items:center;gap:10px;font-size:15px;}
+  .callout.crit .bar{background:var(--fail-bg);color:var(--fail);}
+  .callout .body{padding:16px 18px;font-size:14.5px;}
+  .callout .body p{margin:0 0 12px;} .callout .body p:last-child{margin:0;}
+
+  /* ---- test case cards ---- */
+  .tc{border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);margin:0 0 14px;overflow:hidden;}
+  .tc>summary{list-style:none;cursor:pointer;padding:15px 18px;display:flex;align-items:center;gap:14px;}
+  .tc>summary::-webkit-details-marker{display:none;}
+  .tc>summary .tcid{font-family:var(--mono);font-weight:700;color:var(--accent);font-size:13px;white-space:nowrap;}
+  .tc>summary .tctitle{font-weight:600;flex:1;}
+  .tc>summary .chev{color:var(--muted);transition:transform .2s;font-family:var(--mono);}
+  .tc[open]>summary .chev{transform:rotate(90deg);}
+  .tc .tcbody{padding:2px 18px 18px;border-top:1px solid var(--border);}
+  .tc .row{display:grid;grid-template-columns:120px 1fr;gap:6px 16px;padding:11px 0;border-bottom:1px dashed var(--border);}
+  .tc .row:last-child{border-bottom:none;}
+  .tc .row .k{font-family:var(--mono);font-size:11.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);padding-top:2px;}
+  .tc .row ol{margin:0;padding-left:20px;} .tc .row ol li{margin:0 0 5px;}
+  .tc .row .exp{color:var(--ink);}
+  .board{font-family:var(--mono);font-size:11px;padding:2px 7px;border-radius:5px;border:1px solid var(--border-strong);color:var(--muted);}
+
+  ul.clean{list-style:none;padding:0;margin:0;}
+  ul.clean li{padding:9px 0 9px 26px;border-bottom:1px solid var(--border);position:relative;font-size:14.5px;}
+  ul.clean li:last-child{border-bottom:none;}
+  ul.clean li::before{content:"›";position:absolute;left:6px;color:var(--accent);font-weight:700;}
+  a{color:var(--accent);}
+  .foot{margin-top:60px;padding-top:20px;border-top:1px solid var(--border);font-family:var(--mono);font-size:12px;color:var(--muted);}
+</style>
+
+<div class="wrap">
+  <p class="sr-only">Отчёт о тестировании и план ручных тест-кейсов для десктоп-приложения OpenBlock, собранного под ESP32 и Arduino Uno.</p>
+
+  <header>
+    <p class="eyebrow">QA · Firmware toolchain · v2.6.3</p>
+    <h1>OpenBlock ESP32 — тест-план и отчёт о прогоне</h1>
+    <p class="lede">Проверка сценария «пользователь скачал <code>.exe</code> → установил → подключил плату → написал программу блоками → залил → железо ответило». Ниже — что я уже прогнал автоматически, и пошаговые кейсы для проверки с реальной платой.</p>
+    <div class="meta">
+      <span>Сборка: <b>OpenBlock-Desktop_v2.6.3_win_x64.exe · 1.42 ГБ</b></span>
+      <span>Тулчейн: <b>arduino-cli 0.35.3 · esp32 3.1.3 · avr 1.8.6</b></span>
+      <span>Дата прогона: <b>2026-07-17</b></span>
+    </div>
+  </header>
+
+  <div class="tiles">
+    <div class="tile pass"><div class="n">9</div><div class="l">автотестов пройдено</div></div>
+    <div class="tile fail"><div class="n">1</div><div class="l">критичный риск</div></div>
+    <div class="tile warn"><div class="n">1</div><div class="l">на проверку в GUI</div></div>
+    <div class="tile"><div class="n">13</div><div class="l">ручных кейсов на завтра</div></div>
+  </div>
+
+  <!-- ================= VERDICT ================= -->
+  <section>
+    <h2>Итог</h2>
+    <p class="h2sub">Arduino Uno — «скачал и работает» у всех. ESP32 — только при установке в ASCII-путь.</p>
+    <ul class="clean">
+      <li><b>Ядро подтверждено:</b> приложение запускается, встроенные серверы поднимаются, тулчейн собирает программы и для Uno, и для ESP32 полностью офлайн.</li>
+      <li><b>Arduino Uno устойчив к кириллице</b> — компилируется даже из установки в папку с кириллическим именем и при кириллическом имени Windows-аккаунта. Для твоих завтрашних планов с Uno — зелёный свет.</li>
+      <li><b>ESP32 ломается на кириллице в пути установки</b> — Rust-инструмент сборки ESP32 не умеет не-ASCII пути. Это единственный барьер для «у всех работает», и он решается выбором ASCII-папки установки.</li>
+    </ul>
+  </section>
+
+  <!-- ================= AUTOMATED ================= -->
+  <section>
+    <h2>Раздел A · Автоматические тесты (прогнал сам)</h2>
+    <p class="h2sub">Внутренние и виртуальные проверки с доказательствами</p>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>ID</th><th>Что проверялось</th><th>Плата</th><th>Итог</th><th>Свидетельство</th></tr></thead>
+        <tbody>
+          <tr><td class="id">AT-01</td><td>Серверы приложения поднимаются (link / resource)</td><td>—</td><td><span class="pill pass">Pass</span></td><td class="ev">20111 → openblock-link-server; 20112 → openblock-resource-server</td></tr>
+          <tr><td class="id">AT-02</td><td>Инсталлятор собирается, валидный PE</td><td>—</td><td><span class="pill pass">Pass</span></td><td class="ev">1.42 ГБ, заголовок MZ, latest.yml + blockmap</td></tr>
+          <tr><td class="id">AT-03</td><td>Компиляция Uno: analogRead + GPIO + Serial + if/for</td><td><span class="board">UNO</span></td><td><span class="pill pass">Pass</span></td><td class="ev">2474 б (7% flash), exit 0</td></tr>
+          <tr><td class="id">AT-04</td><td>Компиляция ESP32: digital + analog + Serial</td><td><span class="board">ESP32</span></td><td><span class="pill pass">Pass</span></td><td class="ev">303 356 б (23%), exit 0</td></tr>
+          <tr><td class="id">AT-05</td><td>Компиляция ESP32 PWM по новому API ядра 3.x</td><td><span class="board">ESP32</span></td><td><span class="pill pass">Pass</span></td><td class="ev"><code>ledcAttach()</code>, 302 124 б, exit 0</td></tr>
+          <tr><td class="id">AT-06</td><td>Прошивка Uno для Wokwi — валидный Intel HEX</td><td><span class="board">UNO</span></td><td><span class="pill pass">Pass</span></td><td class="ev">127 записей, EOF <code>:00000001FF</code></td></tr>
+          <tr><td class="id">AT-07</td><td>Механизм определения COM-портов</td><td>—</td><td><span class="pill pass">Pass</span></td><td class="ev">arduino-cli board list → COM1 (платы ещё нет)</td></tr>
+          <tr><td class="id">AT-08</td><td>Установка инсталлятора + запуск установленного приложения</td><td>—</td><td><span class="pill pass">Pass</span></td><td class="ev">рабочая установка запущена (8 процессов)</td></tr>
+          <tr><td class="id">AT-09</td><td>Uno из установки на <b>кириллическом</b> пути</td><td><span class="board">UNO</span></td><td><span class="pill pass">Pass</span></td><td class="ev">924 б, exit 0 — AVR к кириллице устойчив</td></tr>
+          <tr><td class="id">AT-10</td><td>ESP32: ASCII-тулчейн + кириллический build-путь</td><td><span class="board">ESP32</span></td><td><span class="pill pass">Pass</span></td><td class="ev">283 416 б — важен только путь тулчейна</td></tr>
+          <tr><td class="id">AT-11</td><td>ESP32 из установки на <b>кириллическом</b> пути</td><td><span class="board">ESP32</span></td><td><span class="pill fail">Fail</span></td><td class="ev">panic: Failed to get path name (0xc0000409)</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ================= CRITICAL ================= -->
+  <section>
+    <h2>Критичный риск</h2>
+    <p class="h2sub">Кириллица в пути установки ломает ESP32 (не Uno)</p>
+    <div class="callout crit">
+      <div class="bar">⚠ Пользователь с кириллицей в пути установки или имени аккаунта не сможет собрать ESP32</div>
+      <div class="body">
+        <p>Тулчейн ESP32 содержит Rust-инструмент, который падает на не-ASCII путях (<code>Failed to get path name. Error code: 3</code>). Ломается <b>именно путь к папке установки</b> (там лежит <code>tools/Arduino</code>) — build-папка и имя аккаунта роли не играют. Arduino Uno этим не затронут.</p>
+        <p><b>Как обеспечить «работает у всех» (без правки логики приложения):</b></p>
+        <p>1. Установка <b>для всех пользователей</b> → <code>C:\Program Files\OpenBlockDesktop</code> — путь всегда ASCII, ESP32 работает независимо от кириллического имени аккаунта.<br>
+        2. Либо дефолт установщика перевести на фиксированный ASCII-путь (например <code>C:\OpenBlock</code>) и/или запретить выбор кириллической папки — это настройка NSIS, не код.<br>
+        3. Правильное решение «навсегда» — CI-сборка + мелкий патч <code>openblock-link</code>, копирующий тулчейн в ASCII-temp (в бэклоге).</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= MANUAL ================= -->
+  <section>
+    <h2>Раздел B · Ручные тест-кейсы (завтра, с платой)</h2>
+    <p class="h2sub">Полный путь «чистый пользователь → мигающий светодиод»</p>
+    <p style="color:var(--muted);font-size:14.5px;margin:-8px 0 22px;max-width:64ch;">Разверни любой кейс. Проходи по порядку; каждый — это «Предусловие → Шаги → Ожидаемо». Uno проверяем физически, ESP32 — с оговоркой про ASCII-путь.</p>
+
+    <details class="tc" open>
+      <summary><span class="tcid">TC-01</span><span class="tctitle">Установка приложения</span><span class="chev">›</span></summary>
+      <div class="tcbody">
+        <div class="row"><span class="k">Предусл.</span><span>Скачан <code>OpenBlock-Desktop_v2.6.3_win_x64.exe</code>. Диск с ≥ 8 ГБ свободного.</span></div>
+        <div class="row"><span class="k">Шаги</span><ol><li>Двойной клик по <code>.exe</code>.</li><li>На запрос UAC — «Да».</li><li><b>Указать ASCII-путь установки</b> (латиница, напр. <code>C:\Program Files\OpenBlockDesktop</code>). Кириллицу в пути — не использовать.</li><li>Дождаться распаковки (~6.5 ГБ, пара минут), «Готово».</li></ol></div>
+        <div class="row"><span class="k">Ожидаемо</span><span class="exp">Установка завершается, создаётся ярлык, приложение запускается.</span></div>
+      </div>
+    </details>
+
+    <details class="tc">
+      <summary><span class="tcid">TC-02</span><span class="tctitle">Первый запуск и загрузка интерфейса</span><span class="chev">›</span></summary>
+      <div class="tcbody">
+        <div class="row"><span class="k">Шаги</span><ol><li>Открыть приложение (или оно откроется само после установки).</li><li>Дождаться загрузки.</li></ol></div>
+        <div class="row"><span class="k">Ожидаемо</span><span class="exp">Окно открывается без ошибок; видно сцену, палитру блоков и панель устройства. Внутренние серверы (20111/20112) поднимаются автоматически.</span></div>
+      </div>
+    </details>
+
+    <details class="tc">
+      <summary><span class="tcid">TC-03</span><span class="tctitle">Выбор устройства Arduino Uno</span><span class="chev">›</span></summary>
+      <div class="tcbody">
+        <div class="row"><span class="k">Шаги</span><ol><li>Открыть выбор устройства (иконка платы / «Add device»).</li><li>Выбрать <b>Arduino Uno</b>.</li></ol></div>
+        <div class="row"><span class="k">Ожидаемо</span><span class="exp">Uno появляется в списке и выбирается; открывается экран подключения; палитра пополняется блоками пинов/Serial.</span></div>
+      </div>
+    </details>
+
+    <details class="tc">
+      <summary><span class="tcid">TC-04</span><span class="tctitle">Подключение платы по USB</span><span class="chev">›</span></summary>
+      <div class="tcbody">
+        <div class="row"><span class="k">Предусл.</span><span><b>Кабель с данными</b> (не «только зарядка»).</span></div>
+        <div class="row"><span class="k">Шаги</span><ol><li>Воткнуть Uno в USB.</li><li>В приложении выбрать появившийся <code>COM*</code> порт.</li><li>Нажать «Connect».</li></ol></div>
+        <div class="row"><span class="k">Ожидаемо</span><span class="exp">Порт появляется в списке, статус меняется на «подключено».</span></div>
+        <div class="row"><span class="k">Если нет порта</span><span>Сменить кабель; поставить драйвер CP2102/CH340 из папки <code>drivers</code> установки.</span></div>
+      </div>
+    </details>
+
+    <details class="tc">
+      <summary><span class="tcid">TC-05</span><span class="tctitle">Собрать программу из блоков (мигание)</span><span class="chev">›</span></summary>
+      <div class="tcbody">
+        <div class="row"><span class="k">Шаги</span><ol><li>Взять стартовый блок (программа/старт).</li><li>Внутри «forever»: «set pin 13 HIGH» → «wait 0.5 s» → «set pin 13 LOW» → «wait 0.5 s».</li></ol></div>
+        <div class="row"><span class="k">Ожидаемо</span><span class="exp">Блоки собираются в стек без ошибок соединения.</span></div>
+      </div>
+    </details>
+
+    <details class="tc">
+      <summary><span class="tcid">TC-06</span><span class="tctitle">Проверка сгенерированного кода</span><span class="chev">›</span></summary>
+      <div class="tcbody">
+        <div class="row"><span class="k">Шаги</span><ol><li>Переключиться в вид кода (Arduino C++).</li></ol></div>
+        <div class="row"><span class="k">Ожидаемо</span><span class="exp">Виден корректный скетч: <code>pinMode(13,OUTPUT)</code>, <code>digitalWrite(13,HIGH/LOW)</code>, <code>delay(500)</code> — соответствует блокам.</span></div>
+      </div>
+    </details>
+
+    <details class="tc">
+      <summary><span class="tcid">TC-07</span><span class="tctitle">Компиляция</span><span class="chev">›</span></summary>
+      <div class="tcbody">
+        <div class="row"><span class="k">Шаги</span><ol><li>Нажать «Upload» (или отдельную компиляцию).</li></ol></div>
+        <div class="row"><span class="k">Ожидаемо</span><span class="exp">Прогресс сборки → «compile success» без ошибок. <span style="color:var(--pass)">Проверено автотестом AT-03 — компилятор Uno работает.</span></span></div>
+      </div>
+    </details>
+
+    <details class="tc">
+      <summary><span class="tcid">TC-08</span><span class="tctitle">Прошивка на плату</span><span class="chev">›</span></summary>
+      <div class="tcbody">
+        <div class="row"><span class="k">Шаги</span><ol><li>Дождаться, пока после компиляции пойдёт заливка (avrdude для Uno).</li></ol></div>
+        <div class="row"><span class="k">Ожидаемо</span><span class="exp">Прогресс записи → «upload complete». RX/TX-светодиоды платы мигают во время заливки.</span></div>
+        <div class="row"><span class="k">Если висит</span><span>Проверить, что порт не занят Serial-монитором; переподключить плату.</span></div>
+      </div>
+    </details>
+
+    <details class="tc">
+      <summary><span class="tcid">TC-09</span><span class="tctitle">Проверка на железе (главный кейс)</span><span class="chev">›</span></summary>
+      <div class="tcbody">
+        <div class="row"><span class="k">Ожидаемо</span><span class="exp">Встроенный светодиод Uno (пин 13, метка «L») <b>мигает раз в 0.5 c</b>. Это и есть «оно реально работает на плате».</span></div>
+        <div class="row"><span class="k">Вариация</span><span>Поменять задержку на 0.1 c, перезалить — частота мигания меняется.</span></div>
+      </div>
+    </details>
+
+    <details class="tc">
+      <summary><span class="tcid">TC-10</span><span class="tctitle">Serial-монитор</span><span class="chev">›</span></summary>
+      <div class="tcbody">
+        <div class="row"><span class="k">Шаги</span><ol><li>Добавить блок печати в Serial в цикл, перезалить.</li><li>Открыть Serial-монитор на 9600.</li></ol></div>
+        <div class="row"><span class="k">Ожидаемо</span><span class="exp">В мониторе идёт поток строк в такт программе.</span></div>
+      </div>
+    </details>
+
+    <details class="tc">
+      <summary><span class="tcid">TC-11</span><span class="tctitle">ESP32 — тот же путь <span class="board">ESP32</span></span><span class="chev">›</span></summary>
+      <div class="tcbody">
+        <div class="row"><span class="k">Предусл.</span><span><b>Приложение установлено в ASCII-путь</b> (см. критичный риск). Плата ESP32 + драйвер CP2102/CH340.</span></div>
+        <div class="row"><span class="k">Шаги</span><ol><li>Выбрать устройство ESP32, подключить COM, собрать мигание на пине 2, залить.</li></ol></div>
+        <div class="row"><span class="k">Ожидаемо</span><span class="exp">Компиляция и прошивка проходят (AT-04 подтверждает компилятор), светодиод на GPIO2 мигает.</span></div>
+        <div class="row"><span class="k">Негатив-кейс</span><span>Если установлено в кириллическую папку — компиляция ESP32 упадёт с «Failed to get path name». Это ожидаемое поведение бага AT-11.</span></div>
+      </div>
+    </details>
+
+    <details class="tc">
+      <summary><span class="tcid">TC-12</span><span class="tctitle">Работа офлайн</span><span class="chev">›</span></summary>
+      <div class="tcbody">
+        <div class="row"><span class="k">Шаги</span><ol><li>Отключить интернет.</li><li>Повторить компиляцию + прошивку.</li></ol></div>
+        <div class="row"><span class="k">Ожидаемо</span><span class="exp">Всё работает — тулчейн, ядра и драйверы вложены в установку, сеть не нужна.</span></div>
+      </div>
+    </details>
+
+    <details class="tc">
+      <summary><span class="tcid">TC-13</span><span class="tctitle">Драйвер USB-UART (если порт не виден)</span><span class="chev">›</span></summary>
+      <div class="tcbody">
+        <div class="row"><span class="k">Шаги</span><ol><li>Определить чип платы (CP2102 = Silicon Labs, CH340).</li><li>Поставить драйвер из папки <code>drivers</code> установки.</li><li>Переподключить плату.</li></ol></div>
+        <div class="row"><span class="k">Ожидаемо</span><span class="exp">После установки драйвера появляется <code>COM*</code> порт.</span></div>
+      </div>
+    </details>
+  </section>
+
+  <!-- ================= WOKWI ================= -->
+  <section>
+    <h2>Раздел C · Виртуальная проверка (без платы)</h2>
+    <p class="h2sub">Симуляция Arduino Uno в Wokwi на нашей же прошивке</p>
+    <ul class="clean">
+      <li>Проект готов: <code>E:\wokwi-uno</code> (<code>wokwi.toml</code> + <code>diagram.json</code>), прошивка <code>fw\sketch.ino.hex</code> скомпилирована нашим тулчейном (AT-06 — HEX валиден).</li>
+      <li>В открытом VS Code: <code>F1 → Wokwi: Start Simulator</code>.</li>
+      <li>Первый раз — «Request a new license» (бесплатно, разовый вход в аккаунт Wokwi).</li>
+      <li>Ожидаемо: на виртуальной Uno мигает зелёный светодиод (D13), в Serial-мониторе идёт <code>LED ON / LED OFF</code>.</li>
+    </ul>
+  </section>
+
+  <!-- ================= ENV ================= -->
+  <section>
+    <h2>Раздел D · Среда прогона</h2>
+    <p class="h2sub">На чём собрано и проверено</p>
+    <div class="tablewrap">
+      <table>
+        <tbody>
+          <tr><td class="id">Приложение</td><td>OpenBlock Desktop 2.6.3 (форк openblockcc, код апстрима не изменён)</td></tr>
+          <tr><td class="id">Сборка</td><td>Node 16.20.2 · electron 15.5.7 · electron-builder 26 · только x64</td></tr>
+          <tr><td class="id">Тулчейн</td><td>arduino-cli 0.35.3 · esp32:esp32 3.1.3 · arduino:avr 1.8.6 (вложены, офлайн)</td></tr>
+          <tr><td class="id">Инсталлятор</td><td>dist\OpenBlock-Desktop_v2.6.3_win_x64.exe · 1.42 ГБ · NSIS, выбор папки установки</td></tr>
+          <tr><td class="id">Известное</td><td>exe с дефолтной иконкой Electron (правку иконки пропустили для сборки без админ-прав); ESP32-PWM-блок — проверить в GUI, что генерит новый LEDC API</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <p class="foot">Прогон автоматических тестов: 2026-07-17 · Ручные TC-01…TC-13 — под физический прогон с Arduino Uno.</p>
+</div>

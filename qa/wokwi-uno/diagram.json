@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "author": "OpenBlock ESP32 MVP",
+  "editor": "wokwi",
+  "parts": [
+    { "type": "wokwi-arduino-uno", "id": "uno", "top": 0, "left": 0, "attrs": {} },
+    { "type": "wokwi-led", "id": "led1", "top": -70, "left": 160, "attrs": { "color": "green", "label": "D13" } },
+    { "type": "wokwi-resistor", "id": "r1", "top": 20, "left": 150, "attrs": { "value": "220" } }
+  ],
+  "connections": [
+    [ "uno:13", "r1:1", "green", [ "v0" ] ],
+    [ "r1:2", "led1:A", "green", [ "v0" ] ],
+    [ "led1:C", "uno:GND.1", "black", [ "v0" ] ]
+  ],
+  "dependencies": {}
+}
