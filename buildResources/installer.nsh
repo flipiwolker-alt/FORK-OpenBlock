@@ -1,7 +1,73 @@
+﻿; This file must stay UTF-8 *with BOM*: makensis falls back to the system codepage without
+; one, which turns the Russian strings below into mojibake.
 !include x64.nsh
 !include LogicLib.nsh
 !include StrFunc.nsh
 ${StrRep}
+${StrLoc}
+
+; The ESP32 toolchain ships a Rust helper that panics with "Failed to get path name" when its
+; own path holds anything outside this set, so ESP32 cannot compile from e.g. E:\уавцуа\.
+; AVR/Uno is unaffected. Only the toolchain path matters — the build path and the Windows
+; account name do not, so a user named C:\Users\Пользователь is fine on an ASCII install dir.
+!define ASCII_PATH_CHARS "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789\:/._- ()"
+!define SAFE_INSTALL_DIR "C:\OpenBlockDesktop"
+
+Var NonAsciiFlag
+
+; Sets $NonAsciiFlag to "1" when $INSTDIR holds a character the ESP32 toolchain cannot handle.
+Function CheckInstDirAscii
+    Push $0
+    Push $1
+    Push $2
+    Push $3
+    StrCpy $NonAsciiFlag "0"
+    StrLen $2 $INSTDIR
+    StrCpy $3 0
+    checkLoop:
+        ${If} $3 >= $2
+            Goto checkDone
+        ${EndIf}
+        StrCpy $1 $INSTDIR 1 $3
+        ${StrLoc} $0 "${ASCII_PATH_CHARS}" $1 ">"
+        ${If} $0 == ""
+            StrCpy $NonAsciiFlag "1"
+            Goto checkDone
+        ${EndIf}
+        IntOp $3 $3 + 1
+        Goto checkLoop
+    checkDone:
+    Pop $3
+    Pop $2
+    Pop $1
+    Pop $0
+FunctionEnd
+
+; Runs after the directory page, before install. Warns and offers to fix a non-ASCII path.
+; Aborts unconditionally so no page is ever drawn — this is a guard, not a real page.
+Function AsciiPathGuard
+    Call CheckInstDirAscii
+    ${If} $NonAsciiFlag == "1"
+        MessageBox MB_YESNO|MB_ICONEXCLAMATION \
+"The installation path contains non-Latin characters:$\r$\n$\r$\n\
+$INSTDIR$\r$\n$\r$\n\
+ESP32 boards will FAIL to compile from this path. Arduino Uno is not affected.$\r$\n\
+Install into ${SAFE_INSTALL_DIR} instead? (recommended)$\r$\n$\r$\n\
+--------$\r$\n$\r$\n\
+Путь установки содержит не-латинские символы:$\r$\n$\r$\n\
+$INSTDIR$\r$\n$\r$\n\
+Платы ESP32 НЕ БУДУТ компилироваться из этой папки. На Arduino Uno это не влияет.$\r$\n\
+Установить в ${SAFE_INSTALL_DIR}? (рекомендуется)" \
+            IDNO keepUserChoice
+        StrCpy $INSTDIR "${SAFE_INSTALL_DIR}"
+    keepUserChoice:
+    ${EndIf}
+    Abort
+FunctionEnd
+
+!macro customPageAfterChangeDir
+    Page custom AsciiPathGuard
+!macroend
 
 !macro preInit
 
