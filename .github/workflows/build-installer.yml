@@ -1,0 +1,72 @@
+name: Build installer
+
+# The installer is ~1.5 GB — far past the 100 MB git limit — so it lives in Releases, not in
+# the repo. This builds it and attaches it to a release, which is what makes "download the exe
+# and it just works" true.
+#
+# Run it from Actions → Build installer → Run workflow, or by pushing a v* tag.
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag to publish the installer under'
+        required: true
+        default: 'v2.6.3-fork.1'
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build-windows:
+    runs-on: windows-2022
+    # npm run dist fetches ~6.5 GB of toolchain and then compresses it into the installer;
+    # locally that takes ~100 minutes.
+    timeout-minutes: 300
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # Node 16 is not optional: the build fails on newer majors.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '16.x'
+
+      - name: Install dependencies
+        run: npm ci
+
+      # clean + compile + fetch:all + electron-builder, in that order.
+      - name: Build installer
+        env:
+          NODE_ENV: production
+          NODE_OPTIONS: --max_old_space_size=4096
+        run: npm run dist
+
+      - name: Show what was built
+        shell: bash
+        run: ls -lh dist/*.exe
+
+      - name: Resolve release tag
+        id: rel
+        shell: bash
+        run: echo "tag=${{ github.event_name == 'workflow_dispatch' && github.event.inputs.tag || github.ref_name }}" >> "$GITHUB_OUTPUT"
+
+      - name: Publish installer to Releases
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          tag="${{ steps.rel.outputs.tag }}"
+          notes=$(mktemp)
+          cat > "$notes" <<'EOF'
+          Установщик для Windows x64. Скачайте `.exe`, запустите, установите — больше ничего не нужно.
+
+          **Не меняйте путь установки на папку с русскими буквами.** Путь по умолчанию (`C:\OpenBlockDesktop`) правильный: на кириллическом пути ESP32 не компилируется. Установщик предупредит и предложит исправить путь. Arduino Uno работает на любом пути.
+          EOF
+          if ! gh release view "$tag" >/dev/null 2>&1; then
+            gh release create "$tag" --title "OpenBlock Desktop $tag" --notes-file "$notes"
+          fi
+          gh release upload "$tag" dist/OpenBlock-Desktop*.exe --clobber
