@@ -34,10 +34,10 @@ mac:
     # - mas
 dmg:
   title: "OpenBlock-Desktop_${version}"
-  # UDRO = read-only, UNCOMPRESSED -> the dmg was ~8 GB. ULMO = LZMA, the same
-  # scheme that lets the NSIS .exe fit in a Release. Mounts on macOS 10.15+.
+  # UDRO = read-only, UNCOMPRESSED -> the dmg was ~8 GB. ULFO = LZFSE-compressed,
+  # which shrinks it enough to fit in a Release. Mounts on macOS 10.11+.
   # Need older-macOS support instead? Use UDBZ (bzip2, 10.4+) or UDZO (zlib) — larger.
-  format: ULMO
+  format: ULFO
 # mas:
 #   category: public.app-category.education
 #   entitlements: buildResources/entitlements.mas.plist
