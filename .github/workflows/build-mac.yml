@@ -7,14 +7,17 @@ name: Build macOS app
 # app is x64 too and the whole stack runs under Rosetta 2 on Apple Silicon. macos-13, which
 # upstream used, was retired on 2025-12-04; macos-15-intel is the x64 replacement.
 #
-# The .dmg is delivered as a build artifact rather than a Release asset: it may exceed the
-# 2 GB Release limit, and a zipped artifact is something macOS unpacks with a double-click.
+# Delivery: a GitHub Release, not an Actions artifact. Artifact downloads can't be resumed and
+# stall/throttle on multi-GB files, so a shaky connection never finishes them. Release assets
+# support HTTP range requests -> a download manager (aria2, IDM, wget -c) can resume them.
+# The dmg is now LZMA-compressed (electron-builder.yaml: dmg.format ULMO), so it should fit the
+# 2 GiB per-asset limit; if it ever doesn't, the job splits it into parts that still resume.
 
 on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write   # needed to publish the Release (was: read)
 
 jobs:
   build-mac:
@@ -50,15 +53,46 @@ jobs:
           USE_HARD_LINKS: false
         run: npm run dist
 
-      # Tells us whether the dmg could ever be a Release asset (2 GB limit).
       - name: Show what was built
         run: ls -lh dist/*.dmg
 
-      - name: Upload dmg
-        uses: actions/upload-artifact@v4
-        with:
-          name: OpenBlock-Desktop-mac-x64
-          path: dist/*.dmg
-          # The dmg is already compressed; re-zipping it only burns minutes.
-          compression-level: 0
-          retention-days: 7
+      - name: Publish dmg to a GitHub Release (resumable; auto-split if over 2 GiB)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          dmg=$(ls dist/*.dmg | head -n1)
+          base=$(basename "$dmg")
+          tag="mac-latest"
+
+          # Rolling release: drop the previous one so old assets don't accumulate.
+          gh release delete "$tag" --yes --cleanup-tag 2>/dev/null || true
+
+          cat > notes.md <<'EOF'
+          Unsigned macOS build (x64 - runs natively on Intel, under Rosetta 2 on Apple Silicon).
+
+          Download with a resume-capable manager (aria2 / IDM / a browser that resumes): the
+          asset supports resuming, so a dropped connection continues instead of restarting.
+
+          If the release lists several `*.part-aa`, `*.part-ab`, ... files, download them ALL into
+          one folder and join them (order is alphabetical):
+
+              cat OpenBlock-Desktop_*.dmg.part-* > OpenBlock-Desktop.dmg
+
+          then open the resulting `.dmg`.
+          EOF
+
+          gh release create "$tag" \
+            --title "OpenBlock Desktop - macOS (x64)" \
+            --notes-file notes.md
+
+          # Split threshold well under the hard 2 GiB (2,147,483,648 B) per-asset cap.
+          limit=$((2000 * 1000 * 1000))   # 1.86 GiB
+          size=$(stat -f%z "$dmg")
+
+          if [ "$size" -le "$limit" ]; then
+            gh release upload "$tag" "$dmg" --clobber
+          else
+            ( cd dist && split -b 1900m "$base" "${base}.part-" )
+            gh release upload "$tag" dist/"${base}".part-* --clobber
+          fi
